@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/building/building_list_screen.dart';
 import 'utils/constants.dart';
 
 void main() async {
@@ -48,23 +49,7 @@ class AuthGate extends ConsumerWidget {
         if (user == null) {
           return const LoginScreen();
         }
-        // Will be replaced with BuildingListScreen in PR 3
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('PG Management'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () {
-                  ref.read(authServiceProvider).signOut();
-                },
-              ),
-            ],
-          ),
-          body: const Center(
-            child: Text('Logged in! Building management coming next.'),
-          ),
-        );
+        return const BuildingListScreen();
       },
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
