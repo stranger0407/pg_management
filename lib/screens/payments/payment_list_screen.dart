@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/payment.dart';
 import '../../providers/payment_provider.dart';
+import '../../providers/building_provider.dart';
 import '../../utils/helpers.dart';
+import '../invoice/invoice_preview_screen.dart';
 import 'add_payment_screen.dart';
 
 class PaymentListScreen extends ConsumerWidget {
@@ -62,7 +64,7 @@ class PaymentListScreen extends ConsumerWidget {
   }
 }
 
-class _PaymentCard extends StatelessWidget {
+class _PaymentCard extends ConsumerWidget {
   final Payment payment;
   final String buildingId;
 
@@ -72,7 +74,7 @@ class _PaymentCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Card(
@@ -97,7 +99,9 @@ class _PaymentCard extends StatelessWidget {
                   label: Text(
                     payment.isPaid ? 'Paid' : 'Unpaid',
                     style: TextStyle(
-                      color: payment.isPaid ? Colors.green[800] : Colors.red[800],
+                      color: payment.isPaid
+                          ? Colors.green[800]
+                          : Colors.red[800],
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -162,8 +166,37 @@ class _PaymentCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (payment.isPaid) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    final buildingsAsync =
+                        ref.read(buildingsStreamProvider);
+                    buildingsAsync.whenData((buildings) {
+                      final building = buildings
+                          .where((b) => b.buildingId == buildingId)
+                          .firstOrNull;
+                      if (building != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => InvoicePreviewScreen(
+                              building: building,
+                              payment: payment,
+                            ),
+                          ),
+                        );
+                      }
+                    });
+                  },
+                  icon: const Icon(Icons.picture_as_pdf, size: 18),
+                  label: const Text('View Invoice'),
+                ),
+              ),
+            ],
             if (payment.invoiceNumber.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
                 'Invoice: ${payment.invoiceNumber}',
                 style: TextStyle(fontSize: 12, color: Colors.grey[500]),
