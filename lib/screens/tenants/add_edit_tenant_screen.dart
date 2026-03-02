@@ -98,9 +98,8 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
 
     try {
       final tenant = Tenant(
-        id: widget.tenant?.id ?? '',
-        buildingId: widget.buildingId,
-        roomId: widget.tenant?.roomId ?? _selectedRoom!.id,
+        tenantId: widget.tenant?.tenantId ?? '',
+        roomId: widget.tenant?.roomId ?? _selectedRoom!.roomId,
         roomNumber: widget.tenant?.roomNumber ?? _selectedRoom!.roomNumber,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
@@ -113,10 +112,12 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
         isActive: widget.tenant?.isActive ?? true,
       );
 
+      final repo = ref.read(tenantRepositoryProvider(widget.buildingId));
+
       if (widget.isEditing) {
-        await ref.read(tenantProvider.notifier).updateTenant(tenant);
+        await repo.updateTenant(tenant);
       } else {
-        await ref.read(tenantProvider.notifier).addTenant(tenant);
+        await repo.addTenant(tenant);
       }
 
       if (mounted) {
@@ -134,3 +135,141 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
       }
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final roomsAsync = ref.watch(roomsStreamProvider(widget.buildingId));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.isEditing ? 'Edit Tenant' : 'Add Tenant'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Room Dropdown (only for new tenants)
+              if (!widget.isEditing)
+                roomsAsync.when(
+                  data: (rooms) {
+                    final vacantRooms =
+                        rooms.where((r) => !r.isOccupied).toList();
+                    return DropdownButtonFormField<Room>(
+                      initialValue: _selectedRoom,
+                      decoration: const InputDecoration(
+                        labelText: 'Select Room',
+                        prefixIcon: Icon(Icons.meeting_room),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: vacantRooms.map((room) {
+                        return DropdownMenuItem<Room>(
+                          value: room,
+                          child: Text(
+                              'Room ${room.roomNumber} (Floor ${room.floor})'),
+                        );
+                      }).toList(),
+                      onChanged: (room) {
+                        setState(() {
+                          _selectedRoom = room;
+                        });
+                      },
+                      validator: (value) =>
+                          value == null ? 'Please select a room' : null,
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, _) => Text('Error loading rooms: $error'),
+                ),
+              if (!widget.isEditing) const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _nameController,
+                label: 'Full Name',
+                prefixIcon: Icons.person,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter name'
+                    : null,
+              ),
+              const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                prefixIcon: Icons.phone,
+                keyboardType: TextInputType.phone,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter phone number'
+                    : null,
+              ),
+              const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _emailController,
+                label: 'Email (optional)',
+                prefixIcon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+
+              // Join Date
+              InkWell(
+                onTap: _selectDate,
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Join Date',
+                    prefixIcon: Icon(Icons.calendar_today),
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Text(
+                    '${_joinDate.day}/${_joinDate.month}/${_joinDate.year}',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _idProofTypeController,
+                label: 'ID Proof Type (optional)',
+                prefixIcon: Icons.badge,
+              ),
+              const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _idProofNumberController,
+                label: 'ID Proof Number (optional)',
+                prefixIcon: Icons.numbers,
+              ),
+              const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _emergencyContactController,
+                label: 'Emergency Contact (optional)',
+                prefixIcon: Icons.emergency,
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _permanentAddressController,
+                label: 'Permanent Address (optional)',
+                prefixIcon: Icons.home,
+                maxLines: 2,
+              ),
+              const SizedBox(height: 24),
+
+              LoadingButton(
+                label: widget.isEditing ? 'Update Tenant' : 'Add Tenant',
+                isLoading: _isLoading,
+                onPressed: _save,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

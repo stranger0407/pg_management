@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/payment.dart';
 import '../models/expense.dart';
-import '../providers/payment_provider.dart';
-import '../providers/expense_provider.dart';
 
 class DashboardData {
   final double monthlyIncome;
