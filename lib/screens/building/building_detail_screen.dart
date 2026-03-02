@@ -8,6 +8,7 @@ import '../tenants/tenant_list_screen.dart';
 import '../payments/payment_list_screen.dart';
 import '../expenses/expense_list_screen.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../invoice/invoice_list_screen.dart';
 import 'add_edit_building_screen.dart';
 
 class BuildingDetailScreen extends ConsumerWidget {
@@ -157,7 +158,11 @@ class BuildingDetailScreen extends ConsumerWidget {
                     label: 'Invoices',
                     color: Colors.teal,
                     onTap: () {
-                      // Will be connected in PR 9
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => InvoiceListScreen(buildingId: building.buildingId),
+                        ),
+                      );
                     },
                   ),
                 ],
