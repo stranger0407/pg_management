@@ -4,6 +4,7 @@ import '../../models/building.dart';
 import '../../providers/building_provider.dart';
 import '../../utils/helpers.dart';
 import '../rooms/room_list_screen.dart';
+import '../tenants/tenant_list_screen.dart';
 import 'add_edit_building_screen.dart';
 
 class BuildingDetailScreen extends ConsumerWidget {
@@ -101,7 +102,11 @@ class BuildingDetailScreen extends ConsumerWidget {
                     label: 'Tenants',
                     color: Colors.green,
                     onTap: () {
-                      // Will be connected in PR 5
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TenantListScreen(buildingId: building.buildingId),
+                        ),
+                      );
                     },
                   ),
                   _navCard(
