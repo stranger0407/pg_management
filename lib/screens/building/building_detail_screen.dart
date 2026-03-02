@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/building.dart';
 import '../../providers/building_provider.dart';
 import '../../utils/helpers.dart';
+import '../rooms/room_list_screen.dart';
 import 'add_edit_building_screen.dart';
 
 class BuildingDetailScreen extends ConsumerWidget {
@@ -87,7 +88,11 @@ class BuildingDetailScreen extends ConsumerWidget {
                     label: 'Rooms',
                     color: Colors.blue,
                     onTap: () {
-                      // Will be connected in PR 4
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => RoomListScreen(buildingId: building.buildingId),
+                        ),
+                      );
                     },
                   ),
                   _navCard(
