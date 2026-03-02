@@ -7,6 +7,7 @@ import '../rooms/room_list_screen.dart';
 import '../tenants/tenant_list_screen.dart';
 import '../payments/payment_list_screen.dart';
 import '../expenses/expense_list_screen.dart';
+import '../dashboard/dashboard_screen.dart';
 import 'add_edit_building_screen.dart';
 
 class BuildingDetailScreen extends ConsumerWidget {
@@ -143,7 +144,11 @@ class BuildingDetailScreen extends ConsumerWidget {
                     label: 'Dashboard',
                     color: Colors.purple,
                     onTap: () {
-                      // Will be connected in PR 8
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DashboardScreen(buildingId: building.buildingId),
+                        ),
+                      );
                     },
                   ),
                   _navCard(
