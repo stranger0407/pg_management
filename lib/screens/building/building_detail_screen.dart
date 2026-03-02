@@ -5,6 +5,7 @@ import '../../providers/building_provider.dart';
 import '../../utils/helpers.dart';
 import '../rooms/room_list_screen.dart';
 import '../tenants/tenant_list_screen.dart';
+import '../payments/payment_list_screen.dart';
 import 'add_edit_building_screen.dart';
 
 class BuildingDetailScreen extends ConsumerWidget {
@@ -115,7 +116,11 @@ class BuildingDetailScreen extends ConsumerWidget {
                     label: 'Payments',
                     color: Colors.orange,
                     onTap: () {
-                      // Will be connected in PR 6
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PaymentListScreen(buildingId: building.buildingId),
+                        ),
+                      );
                     },
                   ),
                   _navCard(
