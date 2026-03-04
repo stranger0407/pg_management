@@ -141,6 +141,8 @@ class InvoiceService {
                 ),
               ),
               pw.Text('Room: ${payment.roomNumber}'),
+              if (payment.tenantPhone.isNotEmpty)
+                pw.Text('Phone: ${payment.tenantPhone}'),
             ],
           ),
         ),
@@ -292,25 +294,57 @@ class InvoiceService {
   static pw.Widget _buildFooter(Building building) {
     return pw.Column(
       children: [
+        // Authorized Signature section
+        pw.SizedBox(height: 20),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.end,
+          children: [
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                pw.SizedBox(height: 40),
+                pw.Container(
+                  width: 150,
+                  decoration: const pw.BoxDecoration(
+                    border: pw.Border(
+                      top: pw.BorderSide(color: PdfColors.grey400),
+                    ),
+                  ),
+                ),
+                pw.SizedBox(height: 4),
+                pw.Text(
+                  'Authorized Signature',
+                  style: pw.TextStyle(
+                    fontSize: 11,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.grey700,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 30),
         pw.Divider(color: PdfColors.grey300),
         pw.SizedBox(height: 10),
         pw.Center(
           child: pw.Text(
-            'Thank you for your payment!',
+            'Thank You for Staying With Us',
             style: pw.TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: pw.FontWeight.bold,
               color: PdfColors.blue800,
             ),
           ),
         ),
-        pw.SizedBox(height: 6),
+        pw.SizedBox(height: 8),
         pw.Center(
           child: pw.Text(
             building.buildingName,
-            style: const pw.TextStyle(
-              fontSize: 11,
-              color: PdfColors.grey600,
+            style: pw.TextStyle(
+              fontSize: 12,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey700,
             ),
           ),
         ),
@@ -323,6 +357,16 @@ class InvoiceService {
             ),
           ),
         ),
+        if (building.phone.isNotEmpty)
+          pw.Center(
+            child: pw.Text(
+              'Phone: ${building.phone}',
+              style: const pw.TextStyle(
+                fontSize: 10,
+                color: PdfColors.grey500,
+              ),
+            ),
+          ),
         if (building.gstNumber.isNotEmpty)
           pw.Center(
             child: pw.Text(
@@ -333,6 +377,16 @@ class InvoiceService {
               ),
             ),
           ),
+        pw.SizedBox(height: 12),
+        pw.Center(
+          child: pw.Text(
+            'Generated digitally by PG Management App',
+            style: const pw.TextStyle(
+              fontSize: 9,
+              color: PdfColors.grey400,
+            ),
+          ),
+        ),
       ],
     );
   }

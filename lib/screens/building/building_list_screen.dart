@@ -80,10 +80,9 @@ class _BuildingCard extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          ref.read(selectedBuildingProvider.notifier).state = building;
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => BuildingDetailScreen(building: building),
+              builder: (_) => BuildingDetailScreen(buildingId: building.buildingId),
             ),
           );
         },

@@ -309,6 +309,7 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
         paymentId: '',
         tenantId: tenant.tenantId,
         tenantName: tenant.name,
+        tenantPhone: tenant.phone,
         roomId: tenant.roomId,
         roomNumber: tenant.roomNumber,
         amount: _rentAmount,

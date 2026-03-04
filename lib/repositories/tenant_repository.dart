@@ -23,6 +23,7 @@ class TenantRepository {
   Stream<List<Tenant>> getActiveTenants() {
     return _firestoreService.tenantsCollection(buildingId)
         .where('isActive', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) =>
@@ -35,11 +36,20 @@ class TenantRepository {
       _firestoreService.tenantsCollection(buildingId),
       tenant.toMap(),
     );
-    // Mark the room as occupied
-    await _firestoreService.updateDocument(
-      _firestoreService.roomsCollection(buildingId).doc(tenant.roomId),
-      {'isOccupied': true},
-    );
+    // Update room occupancy count and status
+    final roomRef =
+        _firestoreService.roomsCollection(buildingId).doc(tenant.roomId);
+    final roomDoc = await roomRef.get();
+    if (roomDoc.exists) {
+      final data = roomDoc.data() as Map<String, dynamic>;
+      final currentCount = data['occupantCount'] ?? 0;
+      final newCount = currentCount + 1;
+      final capacity = data['capacity'] ?? 1;
+      await roomRef.update({
+        'occupantCount': newCount,
+        'isOccupied': newCount >= capacity,
+      });
+    }
     return docRef.id;
   }
 
@@ -55,23 +65,51 @@ class TenantRepository {
       _firestoreService.tenantsCollection(buildingId).doc(tenant.tenantId),
       {'isActive': false},
     );
-    // Check if any other active tenants are in this room
+    // Update room occupancy count
+    final roomRef =
+        _firestoreService.roomsCollection(buildingId).doc(tenant.roomId);
     final roomTenants = await _firestoreService
         .tenantsCollection(buildingId)
         .where('roomId', isEqualTo: tenant.roomId)
         .where('isActive', isEqualTo: true)
         .get();
-    if (roomTenants.docs.isEmpty) {
-      await _firestoreService.updateDocument(
-        _firestoreService.roomsCollection(buildingId).doc(tenant.roomId),
-        {'isOccupied': false},
-      );
-    }
+    final activeCount = roomTenants.docs.length;
+    await roomRef.update({
+      'occupantCount': activeCount,
+      'isOccupied': activeCount > 0 ? true : false,
+    });
   }
 
   Future<void> deleteTenant(String tenantId) async {
+    // Get tenant data before deleting to update room
+    final tenantDoc = await _firestoreService
+        .tenantsCollection(buildingId)
+        .doc(tenantId)
+        .get();
+
     await _firestoreService.deleteDocument(
       _firestoreService.tenantsCollection(buildingId).doc(tenantId),
     );
+
+    // Update room occupancy if tenant data was found
+    if (tenantDoc.exists) {
+      final data = tenantDoc.data() as Map<String, dynamic>;
+      final roomId = data['roomId'] as String?;
+      final wasActive = data['isActive'] as bool? ?? true;
+      if (roomId != null && wasActive) {
+        final roomRef =
+            _firestoreService.roomsCollection(buildingId).doc(roomId);
+        final roomTenants = await _firestoreService
+            .tenantsCollection(buildingId)
+            .where('roomId', isEqualTo: roomId)
+            .where('isActive', isEqualTo: true)
+            .get();
+        final activeCount = roomTenants.docs.length;
+        await roomRef.update({
+          'occupantCount': activeCount,
+          'isOccupied': activeCount > 0 ? true : false,
+        });
+      }
+    }
   }
 }

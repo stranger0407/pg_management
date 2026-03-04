@@ -76,21 +76,39 @@ class InvoiceListScreen extends ConsumerWidget {
                     ),
                   ),
                   onTap: () {
-                    buildingsAsync.whenData((buildings) {
-                      final building = buildings
-                          .where((b) => b.buildingId == buildingId)
-                          .firstOrNull;
-                      if (building != null) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => InvoicePreviewScreen(
-                              building: building,
-                              payment: payment,
+                    buildingsAsync.when(
+                      data: (buildings) {
+                        final building = buildings
+                            .where((b) => b.buildingId == buildingId)
+                            .firstOrNull;
+                        if (building != null) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => InvoicePreviewScreen(
+                                building: building,
+                                payment: payment,
+                              ),
                             ),
-                          ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Building data not found')),
+                          );
+                        }
+                      },
+                      loading: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Loading building data, please try again...')),
                         );
-                      }
-                    });
+                      },
+                      error: (error, _) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error: $error')),
+                        );
+                      },
+                    );
                   },
                 ),
               );

@@ -92,20 +92,20 @@ class _RoomCard extends ConsumerWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          'Floor ${room.floor} \u2022 ${Helpers.formatCurrency(room.rentAmount)}/month \u2022 Cap: ${room.capacity}',
+          'Floor ${room.floor} \u2022 ${Helpers.formatCurrency(room.rentAmount)}/month \u2022 ${room.occupantCount}/${room.capacity} beds',
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Chip(
               label: Text(
-                room.isOccupied ? 'Occupied' : 'Vacant',
+                room.isFull ? 'Full' : (room.occupantCount > 0 ? '${room.occupantCount}/${room.capacity}' : 'Vacant'),
                 style: TextStyle(
-                  color: room.isOccupied ? Colors.red : Colors.green,
+                  color: room.isFull ? Colors.red : Colors.green,
                   fontSize: 12,
                 ),
               ),
-              backgroundColor: room.isOccupied
+              backgroundColor: room.isFull
                   ? Colors.red.withValues(alpha: 0.1)
                   : Colors.green.withValues(alpha: 0.1),
               side: BorderSide.none,
@@ -123,6 +123,18 @@ class _RoomCard extends ConsumerWidget {
                     ),
                   );
                 } else if (value == 'delete') {
+                  if (room.occupantCount > 0) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Cannot delete an occupied room. Remove tenants first.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                    return;
+                  }
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
@@ -144,9 +156,26 @@ class _RoomCard extends ConsumerWidget {
                     ),
                   );
                   if (confirmed == true) {
-                    ref
-                        .read(roomRepositoryProvider(buildingId))
-                        .deleteRoom(room.roomId);
+                    try {
+                      await ref
+                          .read(roomRepositoryProvider(buildingId))
+                          .deleteRoom(room.roomId);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Room deleted successfully')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error deleting room: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   }
                 }
               },

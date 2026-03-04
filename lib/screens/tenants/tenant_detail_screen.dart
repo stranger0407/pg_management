@@ -6,17 +6,44 @@ import '../../utils/helpers.dart';
 import 'add_edit_tenant_screen.dart';
 
 class TenantDetailScreen extends ConsumerWidget {
-  final Tenant tenant;
+  final String tenantId;
   final String buildingId;
 
   const TenantDetailScreen({
     super.key,
-    required this.tenant,
+    required this.tenantId,
     required this.buildingId,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tenantsAsync = ref.watch(tenantsStreamProvider(buildingId));
+
+    return tenantsAsync.when(
+      data: (tenants) {
+        final tenant = tenants
+            .where((t) => t.tenantId == tenantId)
+            .firstOrNull;
+        if (tenant == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Tenant')),
+            body: const Center(child: Text('Tenant not found')),
+          );
+        }
+        return _buildContent(context, ref, tenant);
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: const Text('Loading...')),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(child: Text('Error: $error')),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, WidgetRef ref, Tenant tenant) {
     return Scaffold(
       appBar: AppBar(
         title: Text(tenant.name),
@@ -38,7 +65,7 @@ class TenantDetailScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.person_off),
               tooltip: 'Deactivate Tenant',
-              onPressed: () => _confirmDeactivate(context, ref),
+              onPressed: () => _confirmDeactivate(context, ref, tenant),
             ),
         ],
       ),
@@ -125,7 +152,7 @@ class TenantDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDeactivate(BuildContext context, WidgetRef ref) {
+  void _confirmDeactivate(BuildContext context, WidgetRef ref, Tenant tenant) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -140,10 +167,21 @@ class TenantDetailScreen extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await ref
-                  .read(tenantRepositoryProvider(buildingId))
-                  .deactivateTenant(tenant);
-              if (context.mounted) Navigator.of(context).pop();
+              try {
+                await ref
+                    .read(tenantRepositoryProvider(buildingId))
+                    .deactivateTenant(tenant);
+                if (context.mounted) Navigator.of(context).pop();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
             child: const Text('Deactivate'),
