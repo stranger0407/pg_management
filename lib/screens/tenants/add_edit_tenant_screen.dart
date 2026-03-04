@@ -17,8 +17,6 @@ class AddEditTenantScreen extends ConsumerStatefulWidget {
     this.tenant,
   });
 
-  bool get isEditing => tenant != null;
-
   @override
   ConsumerState<AddEditTenantScreen> createState() =>
       _AddEditTenantScreenState();
@@ -27,6 +25,8 @@ class AddEditTenantScreen extends ConsumerStatefulWidget {
 class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+
+  bool get _isEditing => widget.tenant != null;
 
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
@@ -87,7 +87,7 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!widget.isEditing && _selectedRoom == null) {
+    if (!_isEditing && _selectedRoom == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a room')),
       );
@@ -114,7 +114,7 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
 
       final repo = ref.read(tenantRepositoryProvider(widget.buildingId));
 
-      if (widget.isEditing) {
+      if (_isEditing) {
         await repo.updateTenant(tenant);
       } else {
         await repo.addTenant(tenant);
@@ -142,7 +142,7 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit Tenant' : 'Add Tenant'),
+        title: Text(_isEditing ? 'Edit Tenant' : 'Add Tenant'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -152,23 +152,23 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Room Dropdown (only for new tenants)
-              if (!widget.isEditing)
+              if (!_isEditing)
                 roomsAsync.when(
                   data: (rooms) {
-                    final vacantRooms =
-                        rooms.where((r) => !r.isOccupied).toList();
+                    final availableRooms =
+                        rooms.where((r) => !r.isFull).toList();
                     return DropdownButtonFormField<Room>(
-                      initialValue: _selectedRoom,
+                      value: _selectedRoom,
                       decoration: const InputDecoration(
                         labelText: 'Select Room',
                         prefixIcon: Icon(Icons.meeting_room),
                         border: OutlineInputBorder(),
                       ),
-                      items: vacantRooms.map((room) {
+                      items: availableRooms.map((room) {
                         return DropdownMenuItem<Room>(
                           value: room,
                           child: Text(
-                              'Room ${room.roomNumber} (Floor ${room.floor})'),
+                              'Room ${room.roomNumber} (Floor ${room.floor}, ${room.occupantCount}/${room.capacity})'),
                         );
                       }).toList(),
                       onChanged: (room) {
@@ -184,7 +184,7 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
                       const Center(child: CircularProgressIndicator()),
                   error: (error, _) => Text('Error loading rooms: $error'),
                 ),
-              if (!widget.isEditing) const SizedBox(height: 16),
+              if (!_isEditing) const SizedBox(height: 16),
 
               CustomTextField(
                 controller: _nameController,
@@ -262,7 +262,7 @@ class _AddEditTenantScreenState extends ConsumerState<AddEditTenantScreen> {
               const SizedBox(height: 24),
 
               LoadingButton(
-                label: widget.isEditing ? 'Update Tenant' : 'Add Tenant',
+                label: _isEditing ? 'Update Tenant' : 'Add Tenant',
                 isLoading: _isLoading,
                 onPressed: _save,
               ),

@@ -78,7 +78,14 @@ class _AddEditBuildingScreenState extends ConsumerState<AddEditBuildingScreen> {
         await repo.addBuilding(building);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isEditing ? 'Building updated successfully' : 'Building added successfully'),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

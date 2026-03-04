@@ -7,6 +7,7 @@ class Room {
   final double rentAmount;
   final bool isOccupied;
   final int capacity;
+  final int occupantCount;
   final DateTime createdAt;
 
   Room({
@@ -16,8 +17,11 @@ class Room {
     required this.rentAmount,
     this.isOccupied = false,
     this.capacity = 1,
+    this.occupantCount = 0,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
+
+  bool get isFull => occupantCount >= capacity;
 
   factory Room.fromMap(Map<String, dynamic> map, String id) {
     return Room(
@@ -27,6 +31,7 @@ class Room {
       rentAmount: (map['rentAmount'] ?? 0.0).toDouble(),
       isOccupied: map['isOccupied'] ?? false,
       capacity: map['capacity'] ?? 1,
+      occupantCount: map['occupantCount'] ?? 0,
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
@@ -40,6 +45,7 @@ class Room {
       'rentAmount': rentAmount,
       'isOccupied': isOccupied,
       'capacity': capacity,
+      'occupantCount': occupantCount,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -51,6 +57,7 @@ class Room {
     double? rentAmount,
     bool? isOccupied,
     int? capacity,
+    int? occupantCount,
     DateTime? createdAt,
   }) {
     return Room(
@@ -60,6 +67,7 @@ class Room {
       rentAmount: rentAmount ?? this.rentAmount,
       isOccupied: isOccupied ?? this.isOccupied,
       capacity: capacity ?? this.capacity,
+      occupantCount: occupantCount ?? this.occupantCount,
       createdAt: createdAt ?? this.createdAt,
     );
   }

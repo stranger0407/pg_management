@@ -12,12 +12,39 @@ import '../invoice/invoice_list_screen.dart';
 import 'add_edit_building_screen.dart';
 
 class BuildingDetailScreen extends ConsumerWidget {
-  final Building building;
+  final String buildingId;
 
-  const BuildingDetailScreen({super.key, required this.building});
+  const BuildingDetailScreen({super.key, required this.buildingId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final buildingsAsync = ref.watch(buildingsStreamProvider);
+
+    return buildingsAsync.when(
+      data: (buildings) {
+        final building = buildings
+            .where((b) => b.buildingId == buildingId)
+            .firstOrNull;
+        if (building == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Building')),
+            body: const Center(child: Text('Building not found')),
+          );
+        }
+        return _buildContent(context, ref, building);
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: const Text('Loading...')),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(child: Text('Error: $error')),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, WidgetRef ref, Building building) {
     return Scaffold(
       appBar: AppBar(
         title: Text(building.buildingName),
@@ -34,7 +61,7 @@ class BuildingDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => _confirmDelete(context, ref),
+            onPressed: () => _confirmDelete(context, ref, building),
           ),
         ],
       ),
@@ -95,7 +122,7 @@ class BuildingDetailScreen extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => RoomListScreen(buildingId: building.buildingId),
+                          builder: (_) => RoomListScreen(buildingId: buildingId),
                         ),
                       );
                     },
@@ -108,7 +135,7 @@ class BuildingDetailScreen extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => TenantListScreen(buildingId: building.buildingId),
+                          builder: (_) => TenantListScreen(buildingId: buildingId),
                         ),
                       );
                     },
@@ -121,7 +148,7 @@ class BuildingDetailScreen extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => PaymentListScreen(buildingId: building.buildingId),
+                          builder: (_) => PaymentListScreen(buildingId: buildingId),
                         ),
                       );
                     },
@@ -134,7 +161,7 @@ class BuildingDetailScreen extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => ExpenseListScreen(buildingId: building.buildingId),
+                          builder: (_) => ExpenseListScreen(buildingId: buildingId),
                         ),
                       );
                     },
@@ -147,7 +174,7 @@ class BuildingDetailScreen extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => DashboardScreen(buildingId: building.buildingId),
+                          builder: (_) => DashboardScreen(buildingId: buildingId),
                         ),
                       );
                     },
@@ -160,7 +187,7 @@ class BuildingDetailScreen extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => InvoiceListScreen(buildingId: building.buildingId),
+                          builder: (_) => InvoiceListScreen(buildingId: buildingId),
                         ),
                       );
                     },
@@ -223,7 +250,7 @@ class BuildingDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref) {
+  void _confirmDelete(BuildContext context, WidgetRef ref, Building building) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -238,10 +265,21 @@ class BuildingDetailScreen extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await ref
-                  .read(buildingRepositoryProvider)
-                  .deleteBuilding(building.buildingId);
-              if (context.mounted) Navigator.of(context).pop();
+              try {
+                await ref
+                    .read(buildingRepositoryProvider)
+                    .deleteBuilding(building.buildingId);
+                if (context.mounted) Navigator.of(context).pop();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting building: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),

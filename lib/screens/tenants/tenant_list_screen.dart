@@ -109,7 +109,7 @@ class _TenantCard extends StatelessWidget {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => TenantDetailScreen(
-                tenant: tenant,
+                tenantId: tenant.tenantId,
                 buildingId: buildingId,
               ),
             ),

@@ -60,6 +60,7 @@ class _AddEditRoomScreenState extends ConsumerState<AddEditRoomScreen> {
         rentAmount: double.tryParse(_rentController.text) ?? 0.0,
         isOccupied: widget.room?.isOccupied ?? false,
         capacity: int.tryParse(_capacityController.text) ?? 1,
+        occupantCount: widget.room?.occupantCount ?? 0,
         createdAt: widget.room?.createdAt ?? DateTime.now(),
       );
 
@@ -69,7 +70,14 @@ class _AddEditRoomScreenState extends ConsumerState<AddEditRoomScreen> {
         await repo.addRoom(room);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isEditing ? 'Room updated successfully' : 'Room added successfully'),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

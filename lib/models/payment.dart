@@ -4,6 +4,7 @@ class Payment {
   final String paymentId;
   final String tenantId;
   final String tenantName;
+  final String tenantPhone;
   final String roomId;
   final String roomNumber;
   final double amount;
@@ -21,6 +22,7 @@ class Payment {
     required this.paymentId,
     required this.tenantId,
     required this.tenantName,
+    this.tenantPhone = '',
     required this.roomId,
     required this.roomNumber,
     required this.amount,
@@ -40,6 +42,7 @@ class Payment {
       paymentId: id,
       tenantId: map['tenantId'] ?? '',
       tenantName: map['tenantName'] ?? '',
+      tenantPhone: map['tenantPhone'] ?? '',
       roomId: map['roomId'] ?? '',
       roomNumber: map['roomNumber'] ?? '',
       amount: (map['amount'] ?? 0.0).toDouble(),
@@ -63,6 +66,7 @@ class Payment {
     return {
       'tenantId': tenantId,
       'tenantName': tenantName,
+      'tenantPhone': tenantPhone,
       'roomId': roomId,
       'roomNumber': roomNumber,
       'amount': amount,
@@ -82,6 +86,7 @@ class Payment {
     String? paymentId,
     String? tenantId,
     String? tenantName,
+    String? tenantPhone,
     String? roomId,
     String? roomNumber,
     double? amount,
@@ -99,6 +104,7 @@ class Payment {
       paymentId: paymentId ?? this.paymentId,
       tenantId: tenantId ?? this.tenantId,
       tenantName: tenantName ?? this.tenantName,
+      tenantPhone: tenantPhone ?? this.tenantPhone,
       roomId: roomId ?? this.roomId,
       roomNumber: roomNumber ?? this.roomNumber,
       amount: amount ?? this.amount,
